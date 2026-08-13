@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interactive Question Generator</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="container"><div class="card">
+<h1>✨ Interactive Question Generator</h1>
+<p class="subtitle">Generate AI-powered questions from any topic or study material.</p>
+<label>Source / Topic</label>
+<textarea id="source" placeholder="Enter a topic or paste your study material here...">Photosynthesis is the process used by plants, algae, and some bacteria to convert sunlight into chemical energy.</textarea>
+<div class="row">
+<div class="field"><label>Question Type</label>
+<select id="questionType">
+<option>Multiple Choice</option><option>Short Answer</option><option>True/False</option><option>Fill-in-the-Blank</option>
+</select></div>
+<div class="field"><label>Number of Questions</label>
+<input type="number" id="numQuestions" min="1" max="10" value="3">
+</div></div>
+<button id="generateButton" onclick="generateQuestions()">⚡ Generate Questions</button>
+<div id="loading" class="loading hidden">Generating questions... Please wait ⏳</div>
+<div id="output" class="output">Your generated questions will appear here.</div>
+</div></div>
+<script>
+async function generateQuestions() {
+const source=document.getElementById("source").value.trim();
+const questionType=document.getElementById("questionType").value;
+const numQuestions=document.getElementById("numQuestions").value;
+const output=document.getElementById("output");
+const loading=document.getElementById("loading");
+const button=document.getElementById("generateButton");
+if(!source){output.innerHTML="<p class='error'>Please enter a topic or source material.</p>";return;}
+loading.classList.remove("hidden"); output.innerHTML=""; button.disabled=true;
+try{
+const response=await fetch("/generate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({source:source,question_type:questionType,num_questions:numQuestions})});
+const data=await response.json();
+if(data.success){output.innerHTML=formatText(data.result);}
+else{output.innerHTML=`<p class="error">${data.message}</p>`;}
+}catch(error){output.innerHTML="<p class='error'>Something went wrong. Please try again.</p>";console.error(error);}
+loading.classList.add("hidden"); button.disabled=false;
+}
+function formatText(text){return text.replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>").replace(/\n/g,"<br>");}
+</script>
+</body></html>
